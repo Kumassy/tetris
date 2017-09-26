@@ -10,7 +10,10 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
 
     // List of files / patterns to load in the browser
-    files: ['./karma-shim.js'],
+    files: [
+      './src/public/pixi.min.js',
+      './karma-shim.js',
+    ],
 
     // List of preprocessors
     preprocessors: {
