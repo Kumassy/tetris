@@ -13,7 +13,7 @@ describe('nextState', () => {
   // o x o
   let state: App.State;
   beforeEach(() => {
-    state = App.initialize(3);
+    state = App.getInitialState(3);
   });
 
   it('should toggle 4 lights', () => {
