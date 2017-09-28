@@ -1,11 +1,6 @@
-// import './app';
 import * as App from './app'
 
 describe('toggleStatus', () => {
-  // let greeter: Greeter;
-  // beforeEach(() => {
-  //   greeter = new Greeter('testing!');
-  // });
   it('should toggle status', () => {
     expect(App.toggleStatus(App.Status.On)).toBe(App.Status.Off);
     expect(App.toggleStatus(App.Status.Off)).toBe(App.Status.On);
