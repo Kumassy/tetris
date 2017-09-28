@@ -25,34 +25,36 @@ document.body.appendChild(renderer.view);
 // bunny.scale.x = 2;
 // bunny.scale.y = 2;
 //
-// // Opt-in to interactivity
-// bunny.interactive = true;
-// // Shows hand cursor
-// bunny.buttonMode = true;
-// bunny.on('pointerdown', onClick);
+// // // Opt-in to interactivity
+// // bunny.interactive = true;
+// // // Shows hand cursor
+// // bunny.buttonMode = true;
+// // bunny.on('pointerdown', onClick);
 //
 // stage.addChild(bunny);
 // animate();
+// // renderer.render(stage);
 //
 // function animate() {
 //   requestAnimationFrame(animate);
-//   var bunny = stage.getChildAt(0);
-//   bunny.rotation += 0.01;
+//   // var bunny = stage.getChildAt(0);
+//   // bunny.rotation += 0.01;
 //   renderer.render(stage);
 // }
 //
-// function onClick() {
-//   var bunny = stage.getChildAt(0);
-//   bunny.scale.x *= 1.25;
-//   bunny.scale.y *= 1.25;
-//   console.log("hoge");
-// }
+//
+// // function onClick() {
+// //   var bunny = stage.getChildAt(0);
+// //   bunny.scale.x *= 1.25;
+// //   bunny.scale.y *= 1.25;
+// //   console.log("hoge");
+// // }
 
 export type State = Status[][];
 export enum Status {On, Off}
 
 export function initialize(size: number): State {
-  let state: State = [];
+  const state: State = [];
   for (let i = 0; i < size; i++) {
     state[i] = [];
     for (let j = 0; j < size; j++) {
@@ -71,7 +73,7 @@ export function toggleStatus(status: Status): Status {
 }
 
 export function nextState(oldState: State, x: number, y: number): State {
-  let state: State = [];
+  const state: State = [];
   const size = oldState.length;
 
   for (let i = 0; i < size; i++) {
@@ -98,5 +100,66 @@ export function nextState(oldState: State, x: number, y: number): State {
   return state;
 }
 
+function fromStatus(status: Status): any {
+  if (status == Status.On) {
+    // return PIXI.Texture.fromImage('images/white.png');
+    return PIXI.Texture.fromImage('images/dman.png');
+  } else {
+    return PIXI.Texture.fromImage('images/black.png');
+  }
+}
+
+function render(state: State) {
+  const size = state.length;
+
+  for (let i = 0; i < size; i++) {
+    for (let j = 0; j < size; j++) {
+      const texture = fromStatus(state[i][j]);
+      const sprite = new PIXI.Sprite(texture);
+
+      sprite.anchor.x = 0.5;
+      sprite.anchor.y = 0.5;
+      sprite.position.x = 64 * j;
+      sprite.position.y = 64 * i;
+      sprite.scale.x = 2;
+      sprite.scale.y = 2;
+
+      stage.addChild(sprite);
+    }
+  }
+  // renderer.render(stage);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  // var bunny = stage.getChildAt(0);
+  // bunny.rotation += 0.01;
+  renderer.render(stage);
+}
+
+// const stage = new PIXI.Container();
+// let state: State;
+
+const state: State = [
+  [Status.On, Status.On, Status.On],
+  [Status.On, Status.Off, Status.On],
+  [Status.On, Status.On, Status.Off]
+];
 const stage = new PIXI.Container();
-let state: State;
+animate()
+render(state);
+// animate();
+
+// const stage = new PIXI.Container();
+// const sprite = PIXI.Sprite.fromImage('images/dman.png');
+//
+// sprite.anchor.x = 0.5;
+// sprite.anchor.y = 0.5;
+// sprite.position.x = 400;
+// sprite.position.y = 300;
+// sprite.scale.x = 2;
+// sprite.scale.y = 2;
+//
+//
+// stage.addChild(sprite);
+// renderer.render(stage);
