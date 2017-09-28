@@ -12,7 +12,8 @@ import '../styles/base.scss';
 
 import * as PIXI from 'pixi.js';
 
-const renderer = PIXI.autoDetectRenderer(600, 600, {backgroundColor: 0xeeeeee});
+const CANVAS_SIZE = 600;
+const renderer = PIXI.autoDetectRenderer(CANVAS_SIZE, CANVAS_SIZE, {backgroundColor: 0xeeeeee});
 document.body.appendChild(renderer.view);
 
 // var stage = new PIXI.Container();
@@ -111,18 +112,26 @@ function fromStatus(status: Status): any {
 
 function render(state: State) {
   const size = state.length;
+  const tileSize = Math.floor(CANVAS_SIZE / size);
+  stage = new PIXI.Container();
 
   for (let i = 0; i < size; i++) {
     for (let j = 0; j < size; j++) {
       const texture = fromStatus(state[i][j]);
       const sprite = new PIXI.Sprite(texture);
 
-      sprite.anchor.x = 0.5;
-      sprite.anchor.y = 0.5;
-      sprite.position.x = 64 * j;
-      sprite.position.y = 64 * i;
-      sprite.scale.x = 2;
-      sprite.scale.y = 2;
+      // sprite.anchor.x = 0.5;
+      // sprite.anchor.y = 0.5;
+      sprite.position.x = tileSize * j;
+      sprite.position.y = tileSize * i;
+      // sprite.scale.x = 2;
+      // sprite.scale.y = 2;
+      sprite.width = tileSize;
+      sprite.height = tileSize;
+
+      sprite.interactive = true;
+      sprite.buttonMode = true;
+      sprite.on('pointerdown', onClick(i, j));
 
       stage.addChild(sprite);
     }
@@ -132,34 +141,23 @@ function render(state: State) {
 
 function animate() {
   requestAnimationFrame(animate);
-  // var bunny = stage.getChildAt(0);
-  // bunny.rotation += 0.01;
   renderer.render(stage);
 }
 
-// const stage = new PIXI.Container();
-// let state: State;
+function onClick(x: number, y: number) {
+  return function() {
+    state = nextState(state, x, y);
+    render(state);
+  }
+}
 
-const state: State = [
-  [Status.On, Status.On, Status.On],
-  [Status.On, Status.Off, Status.On],
-  [Status.On, Status.On, Status.Off]
-];
-const stage = new PIXI.Container();
+
+// let state: State = [
+//   [Status.On, Status.On, Status.On],
+//   [Status.On, Status.Off, Status.On],
+//   [Status.On, Status.On, Status.Off]
+// ];
+let state = initialize(3);
+let stage = new PIXI.Container();
 animate()
 render(state);
-// animate();
-
-// const stage = new PIXI.Container();
-// const sprite = PIXI.Sprite.fromImage('images/dman.png');
-//
-// sprite.anchor.x = 0.5;
-// sprite.anchor.y = 0.5;
-// sprite.position.x = 400;
-// sprite.position.y = 300;
-// sprite.scale.x = 2;
-// sprite.scale.y = 2;
-//
-//
-// stage.addChild(sprite);
-// renderer.render(stage);
