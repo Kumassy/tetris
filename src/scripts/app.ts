@@ -1,58 +1,12 @@
 import '../styles/base.scss';
-
-// import { Greeter } from './greeter';
-//
-// const greeter: Greeter = new Greeter('tetris');
-//
-// const el = document.getElementById('greeting');
-// if (el) {
-//   el.innerHTML = greeter.greet();
-// }
-
-
 import * as PIXI from 'pixi.js';
+
+export type State = Status[][];
+export enum Status {On, Off}
 
 const CANVAS_SIZE = 600;
 const renderer = PIXI.autoDetectRenderer(CANVAS_SIZE, CANVAS_SIZE, {backgroundColor: 0xeeeeee});
 document.body.appendChild(renderer.view);
-
-// var stage = new PIXI.Container();
-// var texture = PIXI.Texture.fromImage('images/dman.png');
-// var bunny = new PIXI.Sprite(texture);
-// bunny.anchor.x = 0.5;
-// bunny.anchor.y = 0.5;
-// bunny.position.x = 400;
-// bunny.position.y = 300;
-// bunny.scale.x = 2;
-// bunny.scale.y = 2;
-//
-// // // Opt-in to interactivity
-// // bunny.interactive = true;
-// // // Shows hand cursor
-// // bunny.buttonMode = true;
-// // bunny.on('pointerdown', onClick);
-//
-// stage.addChild(bunny);
-// animate();
-// // renderer.render(stage);
-//
-// function animate() {
-//   requestAnimationFrame(animate);
-//   // var bunny = stage.getChildAt(0);
-//   // bunny.rotation += 0.01;
-//   renderer.render(stage);
-// }
-//
-//
-// // function onClick() {
-// //   var bunny = stage.getChildAt(0);
-// //   bunny.scale.x *= 1.25;
-// //   bunny.scale.y *= 1.25;
-// //   console.log("hoge");
-// // }
-
-export type State = Status[][];
-export enum Status {On, Off}
 
 export function initialize(size: number): State {
   const state: State = [];
@@ -120,12 +74,8 @@ function render(state: State) {
       const texture = fromStatus(state[i][j]);
       const sprite = new PIXI.Sprite(texture);
 
-      // sprite.anchor.x = 0.5;
-      // sprite.anchor.y = 0.5;
       sprite.position.x = tileSize * j;
       sprite.position.y = tileSize * i;
-      // sprite.scale.x = 2;
-      // sprite.scale.y = 2;
       sprite.width = tileSize;
       sprite.height = tileSize;
 
@@ -136,7 +86,6 @@ function render(state: State) {
       stage.addChild(sprite);
     }
   }
-  // renderer.render(stage);
 }
 
 function animate() {
