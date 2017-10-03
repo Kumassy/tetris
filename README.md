@@ -1,4 +1,4 @@
-# tetris
+# lights-out
 
 ## Fetch dependencies
 ```

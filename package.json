@@ -1,7 +1,7 @@
 {
-  "name": "tetris",
+  "name": "lights-out",
   "version": "0.0.0",
-  "description": "tetris",
+  "description": "lights-out",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server",

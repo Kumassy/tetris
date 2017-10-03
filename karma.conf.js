@@ -36,7 +36,7 @@ module.exports = function(config) {
     junitReporter: {
       outputDir: 'results', // Results will be saved as $outputDir/$browserName.xml
       outputFile: undefined, // If included, results will be saved as $outputDir/$browserName/$outputFile
-      suite: 'tetris', // Suite will become the package name attribute in xml testsuite element
+      suite: 'lights-out', // Suite will become the package name attribute in xml testsuite element
       useBrowserName: true, // Add browser name to report and classes names
       nameFormatter: undefined, // Function (browser, result) to customize the name attribute in xml testcase element
       classNameFormatter: undefined, // Function (browser, result) to customize the classname attribute in xml testcase element
