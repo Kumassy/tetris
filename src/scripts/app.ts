@@ -8,6 +8,11 @@ const CANVAS_SIZE = 600;
 const app = new PIXI.Application(CANVAS_SIZE, CANVAS_SIZE, {backgroundColor: 0xeeeeee});
 document.body.appendChild(app.view);
 
+interface IAction {
+  type: string,
+  data: any,
+}
+
 export function getInitialState(size: number): State {
   const state: State = [];
   for (let i = 0; i < size; i++) {
@@ -27,36 +32,44 @@ export function toggleStatus(status: Status): Status {
   }
 }
 
-export function nextState(oldState: State, x: number, y: number): State {
-  const state: State = [];
-  const size = oldState.length;
+export function reduce(oldState: State, action: IAction): State {
+  if (action.type === 'click') {
+    const state: State = [];
+    const size = oldState.length;
+    const x = action.data.x;
+    const y = action.data.y;
 
-  for (let i = 0; i < size; i++) {
-    state[i] = [];
-    for (let j = 0; j < size; j++) {
-      state[i][j] = oldState[i][j];
+    for (let i = 0; i < size; i++) {
+      state[i] = [];
+      for (let j = 0; j < size; j++) {
+        state[i][j] = oldState[i][j];
+      }
     }
-  }
 
-  state[x][y] = toggleStatus(oldState[x][y]);
-  if (x - 1 >= 0) {
-    state[x - 1][y] = toggleStatus(oldState[x - 1][y]);
-  }
-  if (x + 1 < size) {
-    state[x + 1][y] = toggleStatus(oldState[x + 1][y]);
-  }
-  if (y - 1 >= 0) {
-    state[x][y - 1] = toggleStatus(oldState[x][y - 1]);
-  }
-  if (y + 1 < size) {
-    state[x][y + 1] = toggleStatus(oldState[x][y + 1]);
-  }
+    state[x][y] = toggleStatus(oldState[x][y]);
+    if (x - 1 >= 0) {
+      state[x - 1][y] = toggleStatus(oldState[x - 1][y]);
+    }
+    if (x + 1 < size) {
+      state[x + 1][y] = toggleStatus(oldState[x + 1][y]);
+    }
+    if (y - 1 >= 0) {
+      state[x][y - 1] = toggleStatus(oldState[x][y - 1]);
+    }
+    if (y + 1 < size) {
+      state[x][y + 1] = toggleStatus(oldState[x][y + 1]);
+    }
 
-  return state;
+    return state;
+  } else if (action.type === 'initialize'){
+    return getInitialState(5);
+  } else {
+    return oldState;
+  }
 }
 
 function fromStatus(status: Status): any {
-  if (status == Status.On) {
+  if (status === Status.On) {
     return PIXI.Texture.fromImage('images/white.png');
   } else {
     return PIXI.Texture.fromImage('images/black.png');
@@ -80,18 +93,18 @@ function render(state: State) {
 
       sprite.interactive = true;
       sprite.buttonMode = true;
-      sprite.on('pointerdown', onClick(i, j));
+      sprite.on('pointerdown', () => dispatcher({type: 'click', data: {x: i, y: j}}));
 
       app.stage.addChild(sprite);
     }
   }
 }
 
-function onClick(x: number, y: number) {
-  return function() {
-    state = nextState(state, x, y);
-    render(state);
-  }
+function dispatcher(action: IAction) {
+  const state = stateStore.state;
+  const nextState = reduce(state, action);
+  render(nextState);
+  stateStore.state = nextState;
 }
 
 // app.ticker.add((delta) => {
@@ -104,5 +117,6 @@ function onClick(x: number, y: number) {
 //   [Status.On, Status.Off, Status.On],
 //   [Status.On, Status.On, Status.Off]
 // ];
-let state = getInitialState(5);
-render(state);
+
+const stateStore: any = {};
+dispatcher({type: 'initialize', data: {}});

@@ -17,7 +17,7 @@ describe('nextState', () => {
   });
 
   it('should toggle 4 lights', () => {
-    state = App.nextState(state, 1, 1);
+    state = App.reduce(state, {type: 'click', data: {x: 1, y: 1}});
     expect(state).toEqual([
       [App.Status.On, App.Status.Off, App.Status.On],
       [App.Status.Off, App.Status.Off, App.Status.Off],
@@ -25,7 +25,7 @@ describe('nextState', () => {
     ]);
   });
   it('should toggle 3 lights', () => {
-    state = App.nextState(state, 1, 0);
+    state = App.reduce(state, {type: 'click', data: {x: 1, y: 0}});
     expect(state).toEqual([
       [App.Status.Off, App.Status.On, App.Status.On],
       [App.Status.Off, App.Status.Off, App.Status.On],
@@ -33,7 +33,7 @@ describe('nextState', () => {
     ]);
   });
   it('should handle corner lights', () => {
-    state = App.nextState(state, 2, 2);
+    state = App.reduce(state, {type: 'click', data: {x: 2, y: 2}});
     expect(state.length).toBe(3);
     expect(state).toEqual([
       [App.Status.On, App.Status.On, App.Status.On],
