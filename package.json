@@ -14,6 +14,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/jasmine": "^2.5.53",
+    "@types/underscore": "^1.8.3",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.4",
     "extract-text-webpack-plugin": "^3.0.0",
@@ -22,9 +23,10 @@
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-jasmine": "^1.1.0",
-    "karma-spec-reporter": "0.0.31",
     "karma-junit-reporter": "^1.2.0",
+    "karma-spec-reporter": "0.0.31",
     "karma-webpack": "^2.0.4",
+    "monapt": "^1.0.4",
     "node-sass": "^4.5.3",
     "prettier": "^1.5.3",
     "sass-loader": "^6.0.6",
@@ -39,6 +41,7 @@
     "webpack-dev-server": "^2.6.1"
   },
   "dependencies": {
-    "pixi.js": "^4.5.6"
+    "pixi.js": "^4.5.6",
+    "underscore": "^1.8.3"
   }
 }
