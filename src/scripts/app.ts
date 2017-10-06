@@ -33,6 +33,56 @@ type Tetrimion = {
   pos: [{x: number; y: number}];
 };
 
+const TETRIMINOS: Tetrimion[] = [
+  // 1
+  // 1
+  // 1 1
+  {
+    texture: PIXI.Texture.fromImage('images/white.png'),
+    pos: [
+      {x: 0, y: 0},
+      {x: 0, y: 1},
+      {x: 0, y: 2},
+      {x: 1, y: 2}
+    ]
+  },
+  // 1 1
+  // 1 1
+  {
+    texture: PIXI.Texture.fromImage('images/white.png'),
+    pos: [
+      {x: 0, y: 0},
+      {x: 0, y: 1},
+      {x: 1, y: 0},
+      {x: 1, y: 1}
+    ]
+  },
+  //   1
+  // 1 1 1
+  {
+    texture: PIXI.Texture.fromImage('images/white.png'),
+    pos: [
+      {x: 1, y: 0},
+      {x: 0, y: 1},
+      {x: 1, y: 1},
+      {x: 2, y: 1}
+    ]
+  },
+  // 1
+  // 1
+  // 1
+  // 1
+  {
+    texture: PIXI.Texture.fromImage('images/white.png'),
+    pos: [
+      {x: 0, y: 0},
+      {x: 0, y: 1},
+      {x: 0, y: 2},
+      {x: 0, y: 3},
+    ]
+  },
+]
+
 const CANVAS_WIDTH = 200;
 const CANVAS_HEIGHT = 400;
 const CELL_WIDTH = 10;
@@ -42,23 +92,32 @@ const app = new PIXI.Application(CANVAS_WIDTH, CANVAS_HEIGHT, {
 });
 document.body.appendChild(app.view);
 
-export function reduce(oldState: State, action: Action): State {
+function reduce(oldState: State, action: Action): State {
   if (action.type === 'next-tick') {
     const state = oldState;
     if (state.cursor) {
       const cursor = state.cursor;
-      if (_.max(cursor.type.pos, (p) => p.y).y + cursor.pos.y < CELL_HEIGHT - 1) {
-        state.cursor.pos.y += 1;
+      const nextCursorPosY = cursor.pos.y + 1;
+
+      const canMove = cursor.type.pos.every((p) => {
+        const x = p.x + cursor.pos.x;
+        const y = p.y + nextCursorPosY;
+        return state.board[x][y] == null;
+      }) && (_.max(cursor.type.pos, (p) => p.y).y + nextCursorPosY < CELL_HEIGHT);
+
+      if (canMove) {
+        state.cursor.pos.y = nextCursorPosY;
       } else {
-        // put board
+        // put cursor to board
         cursor.type.pos.forEach((p) => {
           const x = p.x + cursor.pos.x;
           const y = p.y + cursor.pos.y;
           state.board[x][y] = {texture: cursor.type.texture};
         });
-
-        // discard cursor
         state.cursor = null;
+
+        // delete
+        state.board = deleteLines(state.board);
       }
     }
     return state;
@@ -80,25 +139,41 @@ export function reduce(oldState: State, action: Action): State {
       cursor: action.data.cursor
     }
     return state;
+  } else if (action.type === 'next-cursor') {
+    // TODO remove sample
+    const mino: Tetrimion = _.sample(TETRIMINOS);
+    const cursor = {
+      type: mino,
+      pos: {x: 0, y: 0},
+      rotation: 0
+    }
+    const state: State = {
+      board: oldState.board,
+      cursor: cursor
+    }
+    return state;
   } else if (action.type === 'keyup') {
     const state = oldState;
     if (state.cursor) {
-      state.cursor.pos.x += action.data.diff;
+      const cursor = state.cursor;
+      const nextCursorPosX = cursor.pos.x + action.data.diff;
+
+      const canMove = cursor.type.pos.every((p) => {
+        const x = p.x + nextCursorPosX;
+        const y = p.y + cursor.pos.y;
+        return state.board[x][y] == null;
+      }) && (_.min(cursor.type.pos, (p) => p.x).x + nextCursorPosX >= 0) && (_.max(cursor.type.pos, (p) => p.x).x + nextCursorPosX < CELL_WIDTH);
+
+      if (canMove) {
+        state.cursor.pos.x = nextCursorPosX;
+      }
     }
     return state;
   } else {
     return oldState;
   }
 }
-//
-// function fromStatus(status: Status): any {
-//   if (status === Status.On) {
-//     return PIXI.Texture.fromImage('images/white.png');
-//   } else {
-//     return PIXI.Texture.fromImage('images/black.png');
-//   }
-// }
-//
+
 function render(state: State) {
   app.stage.removeChildren();
 
@@ -132,28 +207,8 @@ function render(state: State) {
       app.stage.addChild(sprite);
     });
   }
-  //
-  // for (let i = 0; i < size; i++) {
-  //   for (let j = 0; j < size; j++) {
-  //     const texture = fromStatus(state[i][j]);
-  //     const sprite = new PIXI.Sprite(texture);
-  //
-  //     sprite.position.x = tileSize * j;
-  //     sprite.position.y = tileSize * i;
-  //     sprite.width = tileSize;
-  //     sprite.height = tileSize;
-  //
-  //     sprite.interactive = true;
-  //     sprite.buttonMode = true;
-  //     sprite.on('pointerdown', () =>
-  //       dispatcher({ type: 'click', data: { x: i, y: j } })
-  //     );
-  //
-  //     app.stage.addChild(sprite);
-  //   }
-  // }
 }
-//
+
 function dispatcher(action: Action) {
   const state = stateStore.state;
 
@@ -162,22 +217,39 @@ function dispatcher(action: Action) {
   stateStore.state = nextState;
 
   if (nextState.cursor == null) {
-    const mymino: Tetrimion = {
-      texture: PIXI.Texture.fromImage('images/white.png'),
-      pos: [
-        {x: 0, y: 0},
-        {x: 0, y: 1},
-        {x: 0, y: 2},
-        {x: 1, y: 2}
-      ]
-    };
-    const cursor = {
-      type: mymino,
-      pos: {x: 0, y: 0},
-      rotation: 0
-    }
-    dispatcher({ type: 'set-cursor', data: { cursor: cursor }});
+    dispatcher({ type: 'next-cursor' });
   }
+}
+
+function _deleteLines(oldBoard: Board, boardWidth: number, boardHeight: number): Board {
+  const board = oldBoard;
+  let deletedLineCount = 0;
+
+  for (let y = boardHeight - 1; y >= 0; y--) {
+    let filled = true;
+    for (let x = 0; x < boardWidth; x++) {
+      filled = filled && (board[x][y] != null);
+    }
+
+    // delete line
+    if (filled) {
+      for (let j = y; j >= 0; j--) {
+        for (let i = 0; i < boardWidth; i++) {
+          if (j === 0) {
+            board[i][j] = null;
+          } else {
+            board[i][j] = board[i][j - 1];
+          }
+        }
+      }
+      deletedLineCount++;
+    }
+  }
+  return board;
+}
+
+function deleteLines(oldBoard: Board): Board {
+  return _deleteLines(oldBoard, CELL_WIDTH, CELL_HEIGHT);
 }
 
 // app.ticker.add((delta) => {
@@ -227,5 +299,10 @@ document.addEventListener('keyup', (e) => {
   } else if (e.keyCode === 39) {
     // right arrow
     dispatcher({ type: 'keyup' , data: { diff: 1 }})
+  } else if (e.keyCode === 40) {
+    // down arrow
+    dispatcher({ type: 'next-tick' })
   }
 })
+
+export {_deleteLines, Board, Cell}
