@@ -31,7 +31,7 @@ type Action = {
 
 type Tetrimion = {
   texture: any;
-  pos: [{x: number; y: number}];
+  pos: {x: number; y: number}[];
 };
 
 const TETRIMINOS: Tetrimion[] = [
@@ -99,21 +99,23 @@ function reduce(oldState: State, action: Action): State {
     if (state.cursor) {
       const cursor = state.cursor;
       const nextCursorPosY = cursor.pos.y + 1;
+      const tetrimion = rotateMino(cursor.type, cursor.rotation);
 
-      const canMove = cursor.type.pos.every((p) => {
+      const canMove = tetrimion.pos.every((p) => {
         const x = p.x + cursor.pos.x;
         const y = p.y + nextCursorPosY;
         return state.board[x][y] == null;
-      }) && (_.max(cursor.type.pos, (p) => p.y).y + nextCursorPosY < CELL_HEIGHT);
+      }) && (_.max(tetrimion.pos, (p) => p.y).y + nextCursorPosY < CELL_HEIGHT);
 
       if (canMove) {
         state.cursor.pos.y = nextCursorPosY;
       } else {
         // put cursor to board
-        cursor.type.pos.forEach((p) => {
+
+        tetrimion.pos.forEach((p) => {
           const x = p.x + cursor.pos.x;
           const y = p.y + cursor.pos.y;
-          state.board[x][y] = {texture: cursor.type.texture};
+          state.board[x][y] = {texture: tetrimion.texture};
         });
         state.cursor = null;
 
@@ -158,16 +160,23 @@ function reduce(oldState: State, action: Action): State {
     if (state.cursor) {
       const cursor = state.cursor;
       const nextCursorPosX = cursor.pos.x + action.data.diff;
+      const tetrimion = rotateMino(cursor.type, cursor.rotation);
 
-      const canMove = cursor.type.pos.every((p) => {
+      const canMove = tetrimion.pos.every((p) => {
         const x = p.x + nextCursorPosX;
         const y = p.y + cursor.pos.y;
         return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && state.board[x][y] == null;
-      }) && (_.min(cursor.type.pos, (p) => p.x).x + nextCursorPosX >= 0) && (_.max(cursor.type.pos, (p) => p.x).x + nextCursorPosX < CELL_WIDTH);
+      }) && (_.min(tetrimion.pos, (p) => p.x).x + nextCursorPosX >= 0) && (_.max(tetrimion.pos, (p) => p.x).x + nextCursorPosX < CELL_WIDTH);
 
       if (canMove) {
         state.cursor.pos.x = nextCursorPosX;
       }
+    }
+    return state;
+  } else if (action.type === 'rotate') {
+    const state = oldState;
+    if (state.cursor) {
+      state.cursor.rotation += action.data.direction;
     }
     return state;
   } else {
@@ -199,7 +208,7 @@ function render(state: State) {
     const cursorRot = state.cursor.rotation;
 
     const texture = tetrimion.texture;
-    tetrimion.pos.forEach((p) => {
+    rotateMino(tetrimion, cursorRot).pos.forEach((p) => {
       const sprite = new PIXI.Sprite(texture);
       sprite.position.x = tileSize * (cursorPos.x + p.x);
       sprite.position.y = tileSize * (cursorPos.y + p.y);
@@ -253,6 +262,48 @@ function deleteLines(oldBoard: Board): Board {
   return _deleteLines(oldBoard, CELL_WIDTH, CELL_HEIGHT);
 }
 
+function rotateMino(mino: Tetrimion, direction: number): Tetrimion {
+  // x' = x \cos\alpha - y \sin\alpha
+  // y' = y \cos\alpha + x \sin\alpha
+  const myCos = (direction: number) => {
+    const dir = (direction % 4 + 4) % 4;
+    if (dir === 1 || dir === 3) {
+      return 0;
+    } else if (dir === 0) { // cos(0)
+      return 1;
+    } else if (dir === 2) { // cos(180)
+      return -1;
+    } else {
+      console.error('unexpected direction');
+      return 0;
+    }
+  };
+  const mySin = (direction: number) => {
+    const dir = (direction % 4 + 4) % 4;
+    if (dir === 0 || dir === 2) {
+      return 0;
+    } else if (dir === 1) { // sin(90)
+      return 1;
+    } else if (dir === 3) { // sin(-90)
+      return -1;
+    } else {
+      console.error('unexpected direction');
+      return 0;
+    }
+  };
+  const pos = mino.pos.map((p) => {
+    return {
+      x: p.x * myCos(direction) - p.y * mySin(direction),
+      y: p.x * mySin(direction) + p.y * myCos(direction)
+    }
+  });
+
+  return {
+    texture: mino.texture,
+    pos: pos
+  };
+}
+
 // app.ticker.add((delta) => {
 //   //
 // });
@@ -296,15 +347,22 @@ setInterval(() => {
 
 
 Rx.Observable.fromEvent(document, 'keyup')
-  .filter((e: any) => e.keyCode === 37)  // left arrow
+  .filter((e: any) => e.key === 'ArrowLeft')  // left arrow
   .subscribe(() => dispatcher({ type: 'keyup' , data: { diff: -1 }}));
 Rx.Observable.fromEvent(document, 'keyup')
-  .filter((e: any) => e.keyCode === 39)  // right arrow
+  .filter((e: any) => e.key === 'ArrowRight')  // right arrow
   .subscribe(() => dispatcher({ type: 'keyup' , data: { diff: 1 }}));
 
+Rx.Observable.fromEvent(document, 'keyup')
+  .filter((e: any) => e.key === 'a')
+  .subscribe(() => dispatcher({ type: 'rotate' , data: { direction: -1 }}));
+Rx.Observable.fromEvent(document, 'keyup')
+  .filter((e: any) => e.key === 'd')
+  .subscribe(() => dispatcher({ type: 'rotate' , data: { direction: 1 }}));
+
 Rx.Observable.fromEvent(document, 'keydown')
-  .filter((e: any) => e.keyCode === 40)
+  .filter((e: any) => e.key === 'ArrowDown') // down arrow
   .throttleTime(70)
   .subscribe(() => dispatcher({ type: 'next-tick' }));
 
-export {_deleteLines, Board, Cell}
+export {_deleteLines, rotateMino, Board, Cell}
