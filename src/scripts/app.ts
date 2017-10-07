@@ -2,6 +2,7 @@ import '../styles/base.scss';
 import * as PIXI from 'pixi.js';
 // import { Option, None } from "monapt";
 import * as _ from 'underscore';
+import * as Rx from 'rxjs/Rx';
 
 // TODO: Immutable.js
 
@@ -161,7 +162,7 @@ function reduce(oldState: State, action: Action): State {
       const canMove = cursor.type.pos.every((p) => {
         const x = p.x + nextCursorPosX;
         const y = p.y + cursor.pos.y;
-        return state.board[x][y] == null;
+        return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && state.board[x][y] == null;
       }) && (_.min(cursor.type.pos, (p) => p.x).x + nextCursorPosX >= 0) && (_.max(cursor.type.pos, (p) => p.x).x + nextCursorPosX < CELL_WIDTH);
 
       if (canMove) {
@@ -292,17 +293,18 @@ dispatcher({ type: 'set-cursor', data: { cursor: cursor }});
 setInterval(() => {
   dispatcher({type: 'next-tick'})}
 , 500);
-document.addEventListener('keyup', (e) => {
-  if (e.keyCode === 37) {
-    // left arrow
-    dispatcher({ type: 'keyup' , data: { diff: -1 }})
-  } else if (e.keyCode === 39) {
-    // right arrow
-    dispatcher({ type: 'keyup' , data: { diff: 1 }})
-  } else if (e.keyCode === 40) {
-    // down arrow
-    dispatcher({ type: 'next-tick' })
-  }
-})
+
+
+Rx.Observable.fromEvent(document, 'keyup')
+  .filter((e: any) => e.keyCode === 37)  // left arrow
+  .subscribe(() => dispatcher({ type: 'keyup' , data: { diff: -1 }}));
+Rx.Observable.fromEvent(document, 'keyup')
+  .filter((e: any) => e.keyCode === 39)  // right arrow
+  .subscribe(() => dispatcher({ type: 'keyup' , data: { diff: 1 }}));
+
+Rx.Observable.fromEvent(document, 'keydown')
+  .filter((e: any) => e.keyCode === 40)
+  .throttleTime(70)
+  .subscribe(() => dispatcher({ type: 'next-tick' }));
 
 export {_deleteLines, Board, Cell}
