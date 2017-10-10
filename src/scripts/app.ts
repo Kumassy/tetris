@@ -236,25 +236,44 @@ function _deleteLines(oldBoard: Board, boardWidth: number, boardHeight: number):
   let deletedLineCount = 0;
 
   for (let y = boardHeight - 1; y >= 0; y--) {
-    let filled = true;
-    for (let x = 0; x < boardWidth; x++) {
-      filled = filled && (board[x][y] != null);
-    }
+    while(1) {
+      let filled = true;
+      for (let x = 0; x < boardWidth; x++) {
+        filled = filled && (board[x][y] != null);
+      }
 
-    // delete line
-    if (filled) {
-      for (let j = y; j >= 0; j--) {
-        for (let i = 0; i < boardWidth; i++) {
-          if (j === 0) {
-            board[i][j] = null;
-          } else {
-            board[i][j] = board[i][j - 1];
+      // delete line
+      if (filled) {
+        for (let j = y; j >= 0; j--) {
+          for (let i = 0; i < boardWidth; i++) {
+            if (j === 0) {
+              board[i][j] = null;
+            } else {
+              board[i][j] = board[i][j - 1];
+            }
           }
         }
+        deletedLineCount++;
+        // y++;  // examine deleted line again
+      } else {
+        break;
       }
-      deletedLineCount++;
     }
+
   }
+
+  // cannot use this unless transposing board array
+  // const filledCount = (row: (Cell | null)[]) => row.filter(r => r != null).length;
+  //
+  // const board = oldBoard.filter((row) => filledCount(row) < boardWidth);
+  //
+  // while(board.length < oldBoard.length) {
+  //   const row = [];
+  //   while(row.length < boardWidth) row.push(null);
+  //
+  //   board.unshift(row);
+  // }
+
   return board;
 }
 
@@ -365,4 +384,4 @@ Rx.Observable.fromEvent(document, 'keydown')
   .throttleTime(70)
   .subscribe(() => dispatcher({ type: 'next-tick' }));
 
-export {_deleteLines, rotateMino, Board, Cell}
+export {_deleteLines, rotateMino, Tetrimion, Board, Cell}
