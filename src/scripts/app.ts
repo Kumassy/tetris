@@ -176,7 +176,19 @@ function reduce(oldState: State, action: Action): State {
   } else if (action.type === 'rotate') {
     const state = oldState;
     if (state.cursor) {
-      state.cursor.rotation += action.data.direction;
+      const cursor = state.cursor;
+      const nextRotation = cursor.rotation + action.data.direction;
+      const tetrimion = rotateMino(cursor.type, nextRotation);
+
+      const canRotate = tetrimion.pos.every((p) => {
+        const x = p.x + cursor.pos.x;
+        const y = p.y + cursor.pos.y;
+        return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && state.board[x][y] == null;
+      }) && (_.min(tetrimion.pos, (p) => p.x).x + cursor.pos.x >= 0) && (_.max(tetrimion.pos, (p) => p.x).x + cursor.pos.x < CELL_WIDTH);
+
+      if (canRotate) {
+        state.cursor.rotation = nextRotation;
+      }
     }
     return state;
   } else {
@@ -379,9 +391,14 @@ Rx.Observable.fromEvent(document, 'keyup')
   .filter((e: any) => e.key === 'd')
   .subscribe(() => dispatcher({ type: 'rotate' , data: { direction: 1 }}));
 
+// soft drop
 Rx.Observable.fromEvent(document, 'keydown')
   .filter((e: any) => e.key === 'ArrowDown') // down arrow
   .throttleTime(70)
   .subscribe(() => dispatcher({ type: 'next-tick' }));
+// quick drop
+Rx.Observable.fromEvent(document, 'keydown')
+  .filter((e: any) => e.key === 'ArrowUp')
+  .subscribe(() => dispatcher({ type: 'quick-drop' }));
 
 export {_deleteLines, rotateMino, Tetrimion, Board, Cell}
