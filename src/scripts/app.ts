@@ -84,10 +84,15 @@ const TETRIMINOS: Tetrimion[] = [
   },
 ]
 
-const CANVAS_WIDTH = 200;
-const CANVAS_HEIGHT = 400;
+const BOARD_WIDTH = 200;
+const BOARD_HEIGHT = 400;
 const CELL_WIDTH = 10;
 const CELL_HEIGHT = 20;
+const BOUNDARY_THICK = 10;
+const INFO_WIDTH = 60;
+const CANVAS_WIDTH = BOARD_WIDTH + BOUNDARY_THICK + INFO_WIDTH;
+const CANVAS_HEIGHT = 400;
+
 const app = new PIXI.Application(CANVAS_WIDTH, CANVAS_HEIGHT, {
   backgroundColor: 0xeeeeee,
 });
@@ -199,7 +204,16 @@ function reduce(oldState: State, action: Action): State {
 function render(state: State) {
   app.stage.removeChildren();
 
-  const tileSize = Math.floor(CANVAS_WIDTH / CELL_WIDTH);
+  {
+    const sprite = new PIXI.Sprite(PIXI.Texture.fromImage('images/black.png'));
+    sprite.position.x = BOARD_WIDTH;
+    sprite.position.y = 0;
+    sprite.width = BOUNDARY_THICK;
+    sprite.height = CANVAS_HEIGHT;
+    app.stage.addChild(sprite);
+  }
+
+  const tileSize = Math.floor(BOARD_HEIGHT / CELL_HEIGHT);
 
   for (let i = 0; i < CELL_WIDTH; i++) {
     for (let j = 0; j < CELL_HEIGHT; j++) {
