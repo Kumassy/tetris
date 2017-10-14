@@ -3,8 +3,8 @@ import * as PIXI from 'pixi.js';
 // import { Option, None } from "monapt";
 import * as _ from 'underscore';
 import * as Rx from 'rxjs/Rx';
-
-// TODO: Immutable.js
+import { Map, Record } from "immutable";
+import { createStore } from 'redux'
 
 type Cell = {
   texture: any;
@@ -20,9 +20,13 @@ type State = {
   } | null
 };
 
-type StateStore = {
-  state: State | null
-}
+// type StateS = Record({
+//   board: null,
+// });
+
+// type StateStore = {
+//   state: State | null
+// }
 
 type Action = {
   type: string,
@@ -98,6 +102,10 @@ const app = new PIXI.Application(CANVAS_WIDTH, CANVAS_HEIGHT, {
 });
 document.body.appendChild(app.view);
 
+// TODO
+// use Immutable
+// rename reduce -> reducer
+
 function reduce(oldState: State, action: Action): State {
   if (action.type === 'next-tick') {
     const state = oldState;
@@ -128,18 +136,6 @@ function reduce(oldState: State, action: Action): State {
         state.board = deleteLines(state.board);
       }
     }
-    return state;
-  } else if (action.type === 'initialize') {
-    const board: Board = [];
-    for (let i = 0; i < CELL_WIDTH; i++) {
-      board[i] = []
-      for (let j = 0; j < CELL_HEIGHT; j++) {
-        board[i][j] = null;
-      }
-    }
-    const state: State = {
-      board: board
-    };
     return state;
   } else if (action.type === 'set-cursor') {
     const state: State = {
@@ -245,16 +241,18 @@ function render(state: State) {
   }
 }
 
-function dispatcher(action: Action) {
-  const state = stateStore.state;
-
-  const nextState = reduce(state, action);
-  render(nextState);
-  stateStore.state = nextState;
-
-  if (nextState.cursor == null) {
-    dispatcher({ type: 'next-cursor' });
+function getInitialState(): State {
+  const board: Board = [];
+  for (let i = 0; i < CELL_WIDTH; i++) {
+    board[i] = []
+    for (let j = 0; j < CELL_HEIGHT; j++) {
+      board[i][j] = null;
+    }
   }
+  const state: State = {
+    board: board
+  };
+  return state;
 }
 
 function _deleteLines(oldBoard: Board, boardWidth: number, boardHeight: number): Board {
@@ -349,20 +347,23 @@ function rotateMino(mino: Tetrimion, direction: number): Tetrimion {
   };
 }
 
+/////////////////
+// main
+
 // app.ticker.add((delta) => {
 //   //
 // });
 
-// let state: State = [
-//   [Status.On, Status.On, Status.On],
-//   [Status.On, Status.Off, Status.On],
-//   [Status.On, Status.On, Status.Off]
-// ];
+const store = createStore(reduce, getInitialState());
+let unsubscribe = store.subscribe(() => {
+  const state = store.getState();
+  render(state);
 
-const stateStore: any = {
-  state: null
-};
-dispatcher({ type: 'initialize' });
+  if (state.cursor == null) {
+    store.dispatch({ type: 'next-cursor' });
+  }
+});
+
 
 
 // 1
@@ -382,37 +383,36 @@ const cursor = {
   pos: {x: 0, y: 0},
   rotation: 0
 }
-dispatcher({ type: 'set-cursor', data: { cursor: cursor }});
-
+store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
 
 
 setInterval(() => {
-  dispatcher({type: 'next-tick'})}
+  store.dispatch({type: 'next-tick'})}
 , 500);
 
 
 Rx.Observable.fromEvent(document, 'keyup')
   .filter((e: any) => e.key === 'ArrowLeft')  // left arrow
-  .subscribe(() => dispatcher({ type: 'keyup' , data: { diff: -1 }}));
+  .subscribe(() => store.dispatch({ type: 'keyup' , data: { diff: -1 }}));
 Rx.Observable.fromEvent(document, 'keyup')
   .filter((e: any) => e.key === 'ArrowRight')  // right arrow
-  .subscribe(() => dispatcher({ type: 'keyup' , data: { diff: 1 }}));
+  .subscribe(() => store.dispatch({ type: 'keyup' , data: { diff: 1 }}));
 
 Rx.Observable.fromEvent(document, 'keyup')
   .filter((e: any) => e.key === 'a')
-  .subscribe(() => dispatcher({ type: 'rotate' , data: { direction: -1 }}));
+  .subscribe(() => store.dispatch({ type: 'rotate' , data: { direction: -1 }}));
 Rx.Observable.fromEvent(document, 'keyup')
   .filter((e: any) => e.key === 'd')
-  .subscribe(() => dispatcher({ type: 'rotate' , data: { direction: 1 }}));
+  .subscribe(() => store.dispatch({ type: 'rotate' , data: { direction: 1 }}));
 
 // soft drop
 Rx.Observable.fromEvent(document, 'keydown')
   .filter((e: any) => e.key === 'ArrowDown') // down arrow
   .throttleTime(70)
-  .subscribe(() => dispatcher({ type: 'next-tick' }));
+  .subscribe(() => store.dispatch({ type: 'next-tick' }));
 // quick drop
 Rx.Observable.fromEvent(document, 'keydown')
   .filter((e: any) => e.key === 'ArrowUp')
-  .subscribe(() => dispatcher({ type: 'quick-drop' }));
+  .subscribe(() => store.dispatch({ type: 'quick-drop' }));
 
 export {_deleteLines, rotateMino, Tetrimion, Board, Cell}
