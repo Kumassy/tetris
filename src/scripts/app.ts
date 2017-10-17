@@ -1,32 +1,55 @@
 import '../styles/base.scss';
 import * as PIXI from 'pixi.js';
-// import { Option, None } from "monapt";
+// import { Option, Some, None } from "monapt";
 import * as _ from 'underscore';
 import * as Rx from 'rxjs/Rx';
-import { Map, Record } from "immutable";
+import { Map, Record, fromJS } from "immutable";
 import { createStore } from 'redux'
 
 type Cell = {
   texture: any;
 }
 type Board = (Cell | null)[][];
-
-type State = {
-  board: Board;
-  cursor?: {
-    type: Tetrimion;
-    pos: {x: number; y: number};
-    rotation: number;
-  } | null
+type Cursor = {
+  type: Tetrimion;
+  pos: {x: number, y: number};
+  rotation: number;
 };
 
-// type StateS = Record({
-//   board: null,
-// });
+// type State = {
+//   board: Board;
+//   cursor?: {
+//     type: Tetrimion;
+//     pos: {x: number; y: number};
+//     rotation: number;
+//   } | null
+// };
 
-// type StateStore = {
-//   state: State | null
-// }
+// https://journal.artfuldev.com/making-immutablejs-work-with-the-advantages-of-typescript-e2a7781a6f77
+interface IState {
+  board: Board;
+  cursor: Cursor| null;
+}
+const StateRecord = Record({
+  board: undefined,
+  cursor: undefined
+});
+class State extends StateRecord implements IState {
+  board: Board;
+  cursor: Cursor | null;
+
+  constructor(props: IState) {
+    super(fromJS(props));
+  }
+
+  set(key: any, value: any): State {
+    return new State(super.set(key, value).toJS());
+  }
+
+  setIn(keyPath: any, value: any): State {
+    return new State(super.setIn(keyPath, value).toJS());
+  }
+}
 
 type Action = {
   type: string,
@@ -106,94 +129,96 @@ document.body.appendChild(app.view);
 // use Immutable
 // rename reduce -> reducer
 
-function reduce(oldState: State, action: Action): State {
+function reduce(state: State, action: Action): State {
   if (action.type === 'next-tick') {
-    const state = oldState;
-    if (state.cursor) {
-      const cursor = state.cursor;
+    // const state = oldState;
+    // let newState: State;
+    if (state.get('cursor')) {
+      const board = state.get('board').toJS();
+      const cursor = state.get('cursor').toJS();
       const nextCursorPosY = cursor.pos.y + 1;
       const tetrimion = rotateMino(cursor.type, cursor.rotation);
 
       const canMove = tetrimion.pos.every((p) => {
         const x = p.x + cursor.pos.x;
         const y = p.y + nextCursorPosY;
-        return state.board[x][y] == null;
+        return board[x][y] == null;
       }) && (_.max(tetrimion.pos, (p) => p.y).y + nextCursorPosY < CELL_HEIGHT);
 
       if (canMove) {
-        state.cursor.pos.y = nextCursorPosY;
-      } else {
-        // put cursor to board
-
-        tetrimion.pos.forEach((p) => {
-          const x = p.x + cursor.pos.x;
-          const y = p.y + cursor.pos.y;
-          state.board[x][y] = {texture: tetrimion.texture};
-        });
-        state.cursor = null;
-
-        // delete
-        state.board = deleteLines(state.board);
+        return state.setIn(['cursor', 'pos', 'y'], nextCursorPosY);
       }
+
+      tetrimion.pos.forEach((p) => {
+        const x = p.x + cursor.pos.x;
+        const y = p.y + cursor.pos.y;
+        board[x][y] = {texture: tetrimion.texture};
+      });
+
+      return state.set('cursor', null)
+                  .set('board', deleteLines(board));
     }
     return state;
   } else if (action.type === 'set-cursor') {
-    const state: State = {
-      board: oldState.board,
-      cursor: action.data.cursor
-    }
-    return state;
-  } else if (action.type === 'next-cursor') {
-    // TODO remove sample
-    const mino: Tetrimion = _.sample(TETRIMINOS);
-    const cursor = {
-      type: mino,
-      pos: {x: 0, y: 0},
-      rotation: 0
-    }
-    const state: State = {
-      board: oldState.board,
-      cursor: cursor
-    }
-    return state;
+    // const state: State = {
+    //   board: oldState.board,
+    //   cursor: action.data.cursor
+    // }
+    // return state;
+    return state.set('cursor', action.data.cursor);
+  // } else if (action.type === 'next-cursor') {
+    // // TODO remove sample
+    // const mino: Tetrimion = _.sample(TETRIMINOS);
+    // const cursor = {
+    //   type: mino,
+    //   pos: {x: 0, y: 0},
+    //   rotation: 0
+    // }
+    // const state: State = {
+    //   board: oldState.board,
+    //   cursor: cursor
+    // }
+    // return state;
   } else if (action.type === 'keyup') {
-    const state = oldState;
-    if (state.cursor) {
-      const cursor = state.cursor;
+    // const state = oldState;
+    if (state.get('cursor')) {
+      const board = state.get('board').toJS();
+      const cursor = state.get('cursor').toJS();
       const nextCursorPosX = cursor.pos.x + action.data.diff;
       const tetrimion = rotateMino(cursor.type, cursor.rotation);
 
       const canMove = tetrimion.pos.every((p) => {
         const x = p.x + nextCursorPosX;
         const y = p.y + cursor.pos.y;
-        return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && state.board[x][y] == null;
+        return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && board[x][y] == null;
       }) && (_.min(tetrimion.pos, (p) => p.x).x + nextCursorPosX >= 0) && (_.max(tetrimion.pos, (p) => p.x).x + nextCursorPosX < CELL_WIDTH);
 
       if (canMove) {
-        state.cursor.pos.x = nextCursorPosX;
+        return state.setIn(['cursor', 'pos', 'x'], nextCursorPosX);
       }
     }
     return state;
   } else if (action.type === 'rotate') {
-    const state = oldState;
-    if (state.cursor) {
-      const cursor = state.cursor;
+    // const state = oldState;
+    if (state.get('cursor')) {
+      const board = state.get('board').toJS();
+      const cursor = state.get('cursor').toJS();
       const nextRotation = cursor.rotation + action.data.direction;
       const tetrimion = rotateMino(cursor.type, nextRotation);
 
       const canRotate = tetrimion.pos.every((p) => {
         const x = p.x + cursor.pos.x;
         const y = p.y + cursor.pos.y;
-        return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && state.board[x][y] == null;
+        return (x >= 0 && x < CELL_WIDTH) && (y >= 0 && y < CELL_HEIGHT) && board[x][y] == null;
       }) && (_.min(tetrimion.pos, (p) => p.x).x + cursor.pos.x >= 0) && (_.max(tetrimion.pos, (p) => p.x).x + cursor.pos.x < CELL_WIDTH);
 
       if (canRotate) {
-        state.cursor.rotation = nextRotation;
+        return state.setIn(['cursor', 'rotation'], nextRotation);
       }
     }
     return state;
   } else {
-    return oldState;
+    return state;
   }
 }
 
@@ -210,11 +235,12 @@ function render(state: State) {
   }
 
   const tileSize = Math.floor(BOARD_HEIGHT / CELL_HEIGHT);
+  const board = state.get('board').toJS();
 
   for (let i = 0; i < CELL_WIDTH; i++) {
     for (let j = 0; j < CELL_HEIGHT; j++) {
-      if (state.board[i][j]) {
-        const sprite = new PIXI.Sprite(state.board[i][j]!.texture);
+      if (board[i][j]) {
+        const sprite = new PIXI.Sprite(board[i][j].texture);
         sprite.position.x = tileSize * i;
         sprite.position.y = tileSize * j;
         sprite.width = tileSize;
@@ -224,10 +250,11 @@ function render(state: State) {
     }
   }
 
-  if (state.cursor) {
-    const tetrimion = state.cursor.type;
-    const cursorPos = state.cursor.pos;
-    const cursorRot = state.cursor.rotation;
+  if (state.get('cursor')) {
+    const cursor = state.get('cursor').toJS();
+    const tetrimion = cursor.type;
+    const cursorPos = cursor.pos;
+    const cursorRot = cursor.rotation;
 
     const texture = tetrimion.texture;
     rotateMino(tetrimion, cursorRot).pos.forEach((p) => {
@@ -249,9 +276,10 @@ function getInitialState(): State {
       board[i][j] = null;
     }
   }
-  const state: State = {
-    board: board
-  };
+  const state: State = new State({
+    board: board,
+    cursor: null
+  });
   return state;
 }
 
@@ -360,7 +388,12 @@ let unsubscribe = store.subscribe(() => {
   render(state);
 
   if (state.cursor == null) {
-    store.dispatch({ type: 'next-cursor' });
+    const cursor = {
+      type: _.sample(TETRIMINOS),
+      pos: {x: 0, y: 0},
+      rotation: 0
+    }
+    store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
   }
 });
 
