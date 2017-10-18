@@ -217,6 +217,12 @@ function reduce(state: State, action: Action): State {
       }
     }
     return state;
+  } else if (action.type === 'quick-drop') {
+    let st = state;
+    while (st.get('cursor') != null) {
+      st = reduce(st, {type: 'next-tick'});
+    }
+    return st;
   } else {
     return state;
   }
