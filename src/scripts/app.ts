@@ -29,14 +29,17 @@ type Cursor = {
 interface IState {
   board: Board;
   cursor: Cursor| null;
+  nextmino: Tetrimion[];
 }
 const StateRecord = Record({
   board: undefined,
-  cursor: undefined
+  cursor: undefined,
+  nextmino: []
 });
 class State extends StateRecord implements IState {
   board: Board;
   cursor: Cursor | null;
+  nextmino: Tetrimion[];
 
   constructor(props: IState) {
     super(fromJS(props));
@@ -155,30 +158,21 @@ function reduce(state: State, action: Action): State {
         board[x][y] = {texture: tetrimion.texture};
       });
 
-      return state.set('cursor', null)
-                  .set('board', deleteLines(board));
+      const nextCursor: Cursor = {
+        type: state.get('nextmino').get(0),
+        pos: {x: 0, y: 0},
+        rotation: 0
+      };
+
+      return state.set('cursor', nextCursor)
+                  .set('board', deleteLines(board))
+                  .set('nextmino', state.get('nextmino').slice(1));
     }
     return state;
   } else if (action.type === 'set-cursor') {
-    // const state: State = {
-    //   board: oldState.board,
-    //   cursor: action.data.cursor
-    // }
-    // return state;
     return state.set('cursor', action.data.cursor);
-  // } else if (action.type === 'next-cursor') {
-    // // TODO remove sample
-    // const mino: Tetrimion = _.sample(TETRIMINOS);
-    // const cursor = {
-    //   type: mino,
-    //   pos: {x: 0, y: 0},
-    //   rotation: 0
-    // }
-    // const state: State = {
-    //   board: oldState.board,
-    //   cursor: cursor
-    // }
-    // return state;
+  } else if (action.type === 'push-mino') {
+    return state.set('nextmino', state.get('nextmino').push(action.data.mino));
   } else if (action.type === 'keyup') {
     // const state = oldState;
     if (state.get('cursor')) {
@@ -219,7 +213,7 @@ function reduce(state: State, action: Action): State {
     return state;
   } else if (action.type === 'quick-drop') {
     let st = state;
-    while (st.get('cursor') != null) {
+    while (st.get('nextmino').size === 3) {
       st = reduce(st, {type: 'next-tick'});
     }
     return st;
@@ -272,6 +266,19 @@ function render(state: State) {
       app.stage.addChild(sprite);
     });
   }
+
+  for (let i = 0; i < state.get('nextmino').size; i++) {
+    const mino: Tetrimion = state.get('nextmino').toJS()[i];
+
+    mino.pos.forEach((p) => {
+      const sprite = new PIXI.Sprite(mino.texture);
+      sprite.position.x = tileSize * p.x + BOARD_WIDTH + BOUNDARY_THICK;
+      sprite.position.y = tileSize * (p.y + i * 5);
+      sprite.width = tileSize;
+      sprite.height = tileSize;
+      app.stage.addChild(sprite);
+    });
+  }
 }
 
 function getInitialState(): State {
@@ -282,9 +289,17 @@ function getInitialState(): State {
       board[i][j] = null;
     }
   }
+
+  const cursor: Cursor = {
+    type: _.sample(TETRIMINOS),
+    pos: {x: 0, y: 0},
+    rotation: 0
+  }
+
   const state: State = new State({
     board: board,
-    cursor: null
+    cursor: cursor,
+    nextmino: [_.sample(TETRIMINOS), _.sample(TETRIMINOS), _.sample(TETRIMINOS)]
   });
   return state;
 }
@@ -393,13 +408,17 @@ let unsubscribe = store.subscribe(() => {
   const state = store.getState();
   render(state);
 
-  if (state.cursor == null) {
-    const cursor = {
-      type: _.sample(TETRIMINOS),
-      pos: {x: 0, y: 0},
-      rotation: 0
-    }
-    store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
+  // if (state.cursor == null) {
+  //   const cursor = {
+  //     type: _.sample(TETRIMINOS),
+  //     pos: {x: 0, y: 0},
+  //     rotation: 0
+  //   }
+  //   store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
+  // }
+  console.log(state.get('nextmino').length);
+  if (state.get('nextmino').size < 3) {
+    store.dispatch({ type: 'push-mino', data: { mino: _.sample(TETRIMINOS) }});
   }
 });
 
@@ -417,12 +436,12 @@ const mymino: Tetrimion = {
     {x: 1, y: 2}
   ]
 };
-const cursor = {
-  type: mymino,
-  pos: {x: 0, y: 0},
-  rotation: 0
-}
-store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
+// const cursor = {
+//   type: mymino,
+//   pos: {x: 0, y: 0},
+//   rotation: 0
+// }
+// store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
 
 
 setInterval(() => {
