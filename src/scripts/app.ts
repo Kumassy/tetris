@@ -123,14 +123,24 @@ const INFO_WIDTH = 60;
 const CANVAS_WIDTH = BOARD_WIDTH + BOUNDARY_THICK + INFO_WIDTH;
 const CANVAS_HEIGHT = 400;
 
-const app = new PIXI.Application(CANVAS_WIDTH, CANVAS_HEIGHT, {
+const app: any = new PIXI.Application(CANVAS_WIDTH, CANVAS_HEIGHT, {
   backgroundColor: 0xeeeeee,
 });
+app.minoLayer = new PIXI.Container();
+app.stage.addChild(app.minoLayer);
 document.body.appendChild(app.view);
 
-// TODO
-// use Immutable
-// rename reduce -> reducer
+const explosionTextures: PIXI.Texture[] = [];
+
+
+PIXI.loader
+  .add('spritesheet', 'images/mc.json')
+  .load(() => {
+    for (let i = 0; i < 26; i++) {
+      let texture = PIXI.Texture.fromFrame('Explosion_Sequence_A ' + (i + 1) + '.png');
+      explosionTextures.push(texture);
+    }
+  });
 
 function reduce(state: State, action: Action): State {
   if (action.type === 'next-tick') {
@@ -163,6 +173,23 @@ function reduce(state: State, action: Action): State {
         pos: {x: 0, y: 0},
         rotation: 0
       };
+
+
+      // TODO FIXME: This code violate referential transparency
+
+      var explosion = new PIXI.extras.AnimatedSprite(explosionTextures);
+
+      explosion.x = Math.random() * app.renderer.width;
+      explosion.y = Math.random() * app.renderer.height;
+      explosion.anchor.set(0.5);
+      explosion.rotation = Math.random() * Math.PI;
+      explosion.scale.set(0.75 + Math.random() * 0.5);
+      explosion.gotoAndPlay(0);
+      explosion.loop = false;
+      explosion.onComplete = () => {
+        app.stage.removeChild(explosion);
+      };
+      app.stage.addChild(explosion);
 
       return state.set('cursor', nextCursor)
                   .set('board', deleteLines(board))
@@ -223,7 +250,8 @@ function reduce(state: State, action: Action): State {
 }
 
 function render(state: State) {
-  app.stage.removeChildren();
+  // app.stage.removeChildren();
+  app.minoLayer.removeChildren();
 
   {
     const sprite = new PIXI.Sprite(PIXI.Texture.fromImage('images/black.png'));
@@ -231,7 +259,8 @@ function render(state: State) {
     sprite.position.y = 0;
     sprite.width = BOUNDARY_THICK;
     sprite.height = CANVAS_HEIGHT;
-    app.stage.addChild(sprite);
+    // app.stage.addChild(sprite);
+    app.minoLayer.addChild(sprite);
   }
 
   const tileSize = Math.floor(BOARD_HEIGHT / CELL_HEIGHT);
@@ -245,7 +274,8 @@ function render(state: State) {
         sprite.position.y = tileSize * j;
         sprite.width = tileSize;
         sprite.height = tileSize;
-        app.stage.addChild(sprite);
+        // app.stage.addChild(sprite);
+        app.minoLayer.addChild(sprite);
       }
     }
   }
@@ -263,7 +293,8 @@ function render(state: State) {
       sprite.position.y = tileSize * (cursorPos.y + p.y);
       sprite.width = tileSize;
       sprite.height = tileSize;
-      app.stage.addChild(sprite);
+      // app.stage.addChild(sprite);
+      app.minoLayer.addChild(sprite);
     });
   }
 
@@ -276,7 +307,8 @@ function render(state: State) {
       sprite.position.y = tileSize * (p.y + i * 5);
       sprite.width = tileSize;
       sprite.height = tileSize;
-      app.stage.addChild(sprite);
+      // app.stage.addChild(sprite);
+      app.minoLayer.addChild(sprite);
     });
   }
 }
