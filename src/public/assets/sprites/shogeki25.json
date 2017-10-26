@@ -1,0 +1,89 @@
+{
+	"meta": {
+		"image": "shogeki25.png",
+		"size": {"w":768,"h":576},
+		"scale": "1"
+	},
+	"frames": {
+		"shogeki25-0.png":
+		{
+			"frame": {"x":0,"y":0,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-1.png":
+		{
+			"frame": {"x":192,"y":0,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-2.png":
+		{
+			"frame": {"x":0,"y":192,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-3.png":
+		{
+			"frame": {"x":192,"y":192,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-4.png":
+		{
+			"frame": {"x":384,"y":0,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-5.png":
+		{
+			"frame": {"x":384,"y":192,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-6.png":
+		{
+			"frame": {"x":0,"y":384,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-7.png":
+		{
+			"frame": {"x":192,"y":384,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-8.png":
+		{
+			"frame": {"x":384,"y":384,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		},
+		"shogeki25-9.png":
+		{
+			"frame": {"x":576,"y":0,"w":192,"h":192},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {"x":0,"y":0,"w":192,"h":192},
+			"sourceSize": {"w":192,"h":192}
+		}
+	}
+}
