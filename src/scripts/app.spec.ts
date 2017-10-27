@@ -1,20 +1,23 @@
-import { _deleteLines, Board, Cell, rotateMino, Tetrimion, } from './app';
+// import { _deleteLines, Board, Cell, rotateMino, Tetrimion, } from './app';
+import { Board, Cell, Tetrimion } from './constants';
+import { _deleteLines, rotateMino } from './mino';
+
 import * as _ from 'underscore';
 
-function t(): {texture: string} {
-  return {texture: 'dummy-texture'}
+function t(): { texture: string } {
+  return { texture: 'dummy-texture' };
 }
 
 describe('deleteLines', () => {
   it('should return the same board if cannot pop lines', () => {
     // transpose array
     // https://stackoverflow.com/questions/17428587/transposing-a-2d-array-in-javascript
-    const board = _.zip.apply(_,[
+    const board = _.zip.apply(_, [
       [t(), null, t()],
       [null, null, t()],
       [t(), t(), null],
     ]);
-    const expected = _.zip.apply(_,[
+    const expected = _.zip.apply(_, [
       [t(), null, t()],
       [null, null, t()],
       [t(), t(), null],
@@ -23,12 +26,12 @@ describe('deleteLines', () => {
     expect(deleted).toEqual(expected);
   });
   it('should delete filled line', () => {
-    const board = _.zip.apply(_,[
+    const board = _.zip.apply(_, [
       [t(), t(), t()],
       [null, null, t()],
       [t(), t(), null],
     ]);
-    const expected = _.zip.apply(_,[
+    const expected = _.zip.apply(_, [
       [null, null, null],
       [null, null, t()],
       [t(), t(), null],
@@ -37,12 +40,12 @@ describe('deleteLines', () => {
     expect(deleted).toEqual(expected);
   });
   it('should delete filled line and drop the line', () => {
-    const board = _.zip.apply(_,[
+    const board = _.zip.apply(_, [
       [t(), null, t()],
       [null, null, t()],
       [t(), t(), t()],
     ]);
-    const expected = _.zip.apply(_,[
+    const expected = _.zip.apply(_, [
       [null, null, null],
       [t(), null, t()],
       [null, null, t()],
@@ -51,12 +54,12 @@ describe('deleteLines', () => {
     expect(deleted).toEqual(expected);
   });
   it('should delete two lines', () => {
-    const board = _.zip.apply(_,[
+    const board = _.zip.apply(_, [
       [t(), t(), t()],
       [t(), t(), t()],
       [t(), null, t()],
     ]);
-    const expected = _.zip.apply(_,[
+    const expected = _.zip.apply(_, [
       [null, null, null],
       [null, null, null],
       [t(), null, t()],
@@ -65,14 +68,14 @@ describe('deleteLines', () => {
     expect(deleted).toEqual(expected);
   });
   it('should delete "tetris"', () => {
-    const board = _.zip.apply(_,[
+    const board = _.zip.apply(_, [
       [t(), null, t(), null],
       [t(), t(), t(), t()],
       [t(), t(), t(), t()],
       [t(), t(), t(), t()],
       [t(), t(), t(), t()],
     ]);
-    const expected = _.zip.apply(_,[
+    const expected = _.zip.apply(_, [
       [null, null, null, null],
       [null, null, null, null],
       [null, null, null, null],
@@ -92,12 +95,7 @@ describe('rotateMino', () => {
     // 1 1
     Lmino = {
       texture: 'dummy-texture',
-      pos: [
-        {x: 0, y: 0},
-        {x: 0, y: 1},
-        {x: 0, y: 2},
-        {x: 1, y: 2}
-      ]
+      pos: [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }, { x: 1, y: 2 }],
     };
   });
 
@@ -112,13 +110,8 @@ describe('rotateMino', () => {
     // 1
     const mino = {
       texture: 'dummy-texture',
-      pos: [
-        {x: 0, y: 0},
-        {x: -1, y: 0},
-        {x: -2, y: 0},
-        {x: -2, y: 1}
-      ]
-    }
+      pos: [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: -2, y: 0 }, { x: -2, y: 1 }],
+    };
     expect(rotateMino(Lmino, 1)).toEqual(mino);
   });
 
@@ -127,14 +120,8 @@ describe('rotateMino', () => {
     // 1 1 1
     const mino = {
       texture: 'dummy-texture',
-      pos: [
-        {x: 0, y: 0},
-        {x: 1, y: 0},
-        {x: 2, y: 0},
-        {x: 2, y: -1}
-      ]
-    }
+      pos: [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }, { x: 2, y: -1 }],
+    };
     expect(rotateMino(Lmino, -1)).toEqual(mino);
   });
-
 });
