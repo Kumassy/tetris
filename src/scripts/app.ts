@@ -15,6 +15,7 @@ import {
 import { TETRIMINOS, rotateMino } from './mino';
 import { reducer } from './reducer';
 import { State, getInitialState } from './store';
+import { loadAnimations } from './animations';
 
 import * as PIXI from 'pixi.js';
 // import { Option, Some, None } from "monapt";
@@ -32,40 +33,6 @@ document.body.appendChild(app.view);
 
 // let explosionTextures: PIXI.Texture[] = [];
 // let fireTextures: PIXI.Texture[] = [];
-type Animations = {
-  explosion: PIXI.Texture[];
-  fire: PIXI.Texture[];
-  attack: PIXI.Texture[];
-};
-const animations: Animations = {
-  explosion: [],
-  fire: [],
-  attack: [],
-};
-
-PIXI.loader
-  .add('explosion', 'images/mc.json')
-  .add('fire', 'assets/sprites/fire12.json')
-  .add('attack', 'assets/sprites/shogeki25.json')
-  .load((loader: any, resources: any) => {
-    for (let i = 0; i < 26; i++) {
-      let texture =
-        resources.explosion.textures[
-          'Explosion_Sequence_A ' + (i + 1) + '.png'
-        ];
-      animations.explosion.push(texture);
-    }
-
-    for (let i = 0; i < 20; i++) {
-      let texture = resources.fire.textures['fire12-' + i + '.png'];
-      animations.fire.push(texture);
-    }
-
-    for (let i = 0; i < 10; i++) {
-      let texture = resources.attack.textures['shogeki25-' + i + '.png'];
-      animations.attack.push(texture);
-    }
-  });
 
 function render(state: State) {
   // app.stage.removeChildren();
@@ -129,6 +96,14 @@ function render(state: State) {
       app.minoLayer.addChild(sprite);
     });
   }
+
+  const animations = state.get('animations').toJS();
+  animations.forEach((anim: PIXI.extras.AnimatedSprite) => {
+    anim.onComplete = () => {
+      app.stage.removeChild(anim);
+    };
+    app.stage.addChild(anim);
+  });
 }
 
 /////////////////
@@ -151,11 +126,11 @@ let unsubscribe = store.subscribe(() => {
   //   }
   //   store.dispatch({ type: 'set-cursor', data: { cursor: cursor }});
   // }
-  console.log(state.get('nextmino').length);
   if (state.get('nextmino').size < 3) {
     store.dispatch({ type: 'push-mino', data: { mino: _.sample(TETRIMINOS) } });
   }
 });
+loadAnimations();
 
 // 1
 // 1

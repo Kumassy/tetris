@@ -10,6 +10,7 @@ import {
   CANVAS_HEIGHT,
 } from './constants';
 import { deleteLines, rotateMino } from './mino';
+import { getAnimation } from './animations';
 
 import * as _ from 'underscore';
 
@@ -48,25 +49,35 @@ function reducer(state: State, action: Action): State {
 
       // TODO FIXME: This code violate referential transparency
 
-      // // var explosion = new PIXI.extras.AnimatedSprite(explosionTextures);
-      // var explosion = new PIXI.extras.AnimatedSprite(animations.attack);
-      //
-      // explosion.x = Math.random() * app.renderer.width;
-      // explosion.y = Math.random() * app.renderer.height;
-      // explosion.anchor.set(0.5);
-      // // explosion.rotation = Math.random() * Math.PI;
-      // explosion.scale.set(0.75 + Math.random() * 0.5);
-      // explosion.loop = false;
-      // explosion.gotoAndPlay(0);
-      // explosion.onComplete = () => {
-      //   app.stage.removeChild(explosion);
-      // };
-      // app.stage.addChild(explosion);
+      // var explosion = new PIXI.extras.AnimatedSprite(explosionTextures);
+      // const explosion = new PIXI.extras.AnimatedSprite(animations.attack);
+      const explosion = getAnimation('attack');
+      let animation: PIXI.extras.AnimatedSprite[];
+      if (explosion != null) {
+        explosion.x = Math.random() * CANVAS_WIDTH;
+        explosion.y = Math.random() * CANVAS_HEIGHT;
+        explosion.anchor.set(0.5);
+        // explosion.rotation = Math.random() * Math.PI;
+        explosion.scale.set(0.75 + Math.random() * 0.5);
+        explosion.loop = false;
+        explosion.gotoAndPlay(0);
+        // explosion.onComplete = () => {
+        //   app.stage.removeChild(explosion);
+        // };
+        // app.stage.addChild(explosion);
+
+        animation = [explosion];
+      } else {
+        animation = [];
+      }
+
+
 
       return state
         .set('cursor', nextCursor)
         .set('board', deleteLines(board))
-        .set('nextmino', state.get('nextmino').slice(1));
+        .set('nextmino', state.get('nextmino').slice(1))
+        .set('animations', animation);
     }
     return state;
   } else if (action.type === 'set-cursor') {

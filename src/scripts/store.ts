@@ -3,6 +3,7 @@ import { Tetrimion, CELL_WIDTH, CELL_HEIGHT } from './constants';
 
 import { Record, fromJS } from 'immutable';
 import * as _ from 'underscore';
+import * as PIXI from 'pixi.js';
 
 type Cell = {
   texture: any;
@@ -19,16 +20,19 @@ interface IState {
   board: Board;
   cursor: Cursor | null;
   nextmino: Tetrimion[];
+  animations: PIXI.extras.AnimatedSprite[];
 }
 const StateRecord = Record({
   board: undefined,
   cursor: undefined,
   nextmino: [],
+  animations: []
 });
 class State extends StateRecord implements IState {
   board: Board;
   cursor: Cursor | null;
   nextmino: Tetrimion[];
+  animations: PIXI.extras.AnimatedSprite[];
 
   constructor(props: IState) {
     super(fromJS(props));
@@ -66,6 +70,7 @@ function getInitialState(): State {
       _.sample(TETRIMINOS),
       _.sample(TETRIMINOS),
     ],
+    animations: []
   });
   return state;
 }
